@@ -1,0 +1,134 @@
+{
+  "name": "elasticsearch_healthy_nodes_incident_on_kubernetes",
+  "description": "This incident type indicates an issue related to Elasticsearch nodes. Specifically, it indicates that one or more nodes in the Elasticsearch cluster are not healthy, which could cause performance issues or data loss. The incident may be triggered automatically by monitoring software or manually by a team member. It typically requires immediate attention to resolve the underlying issue and restore Elasticsearch nodes to a healthy state.",
+  "params": [
+    {
+      "name": "ELASTICSEARCH_POD_LABEL",
+      "value": ""
+    },
+    {
+      "name": "ELASTICSEARCH_CONTAINER_NAME",
+      "value": ""
+    },
+    {
+      "name": "POD_NAME",
+      "value": ""
+    },
+    {
+      "name": "THRESHOLD",
+      "value": ""
+    },
+    {
+      "name": "ELASTICSEARCH_NAMESPACE",
+      "value": ""
+    },
+    {
+      "name": "DEPLOYMENT_NAME",
+      "value": ""
+    },
+    {
+      "name": "REPLICA_COUNT",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Elasticsearch Healthy Nodes Incident on Kubernetes\nThis incident type indicates an issue related to Elasticsearch nodes. Specifically, it indicates that one or more nodes in the Elasticsearch cluster are not healthy, which could cause performance issues or data loss. The incident may be triggered automatically by monitoring software or manually by a team member. It typically requires immediate attention to resolve the underlying issue and restore Elasticsearch nodes to a healthy state."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 1. Get the list of Elasticsearch cluster pods"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl get pods -n ${ELASTICSEARCH_NAMESPACE} -l ${ELASTICSEARCH_POD_LABEL}`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 2. Check the status of the Elasticsearch cluster pods"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl describe pods -n ${ELASTICSEARCH_NAMESPACE} ${POD_NAME}`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 3. Check the Elasticsearch cluster health status"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE | name=$POD_NAME | `curl -X GET \"http://localhost:9200/_cluster/health?pretty\"`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## 4. Check the Elasticsearch cluster node status"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE | name=$POD_NAME | `curl -X GET \"http://localhost:9200/_cat/nodes?v\"`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Elasticsearch cluster is experiencing high CPU or memory usage."
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | random=1 | limit=1 | invoke_elasticsearch_threshold_script($ELASTICSEARCH_CONTAINER_NAME, $POD_NAME, $THRESHOLD, $ELASTICSEARCH_NAMESPACE, $NAMESPACE)"
+    },
+    {
+      "name": "cell_12",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## One or more Elasticsearch nodes are down or unresponsive."
+    },
+    {
+      "name": "cell_13",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | random=1 | limit=1 | invoke_elasticsearch_check($ELASTICSEARCH_POD_LABEL, $ELASTICSEARCH_CONTAINER_NAME, $ELASTICSEARCH_NAMESPACE, $NAMESPACE)"
+    },
+    {
+      "name": "cell_14",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## If there is a missing data node in the Elasticsearch cluster, add a new node or replace the missing one."
+    },
+    {
+      "name": "cell_15",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | random=1 | limit=1 | invoke_scale_up_deployment($DEPLOYMENT_NAME, $REPLICA_COUNT)"
+    }
+  ]
+}
